@@ -37,6 +37,8 @@ model book {
   bookgenre       bookgenre[]
   bookpublisher   bookpublisher[]
   loan            loan[]
+  Review          Review[]
+  inStock Boolean @default(true)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -148,4 +150,12 @@ model publication {
   createdat           DateTime        @default(dbgenerated("CURRENT_DATE")) @db.Date
   updatedat           DateTime        @default(dbgenerated("CURRENT_DATE")) @db.Date
   bookpublisher       bookpublisher[]
+}
+
+model Review {
+  id                  Int     @id @default(autoincrement())
+  rating              Int
+  comment             String?
+  book_id             Int
+  book                book    @relation(fields: [book_id], references: [book_id])
 }
