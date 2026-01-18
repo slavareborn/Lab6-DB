@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model author {
+  author_id   Int          @id @default(autoincrement())
+  firstname   String       @db.VarChar(50)
+  secondname  String       @db.VarChar(50)
+  dateofbirth DateTime     @db.Date
+  dateofdeath DateTime?    @db.Date
+  createdat   DateTime?    @default(now()) @db.Timestamp(6)
+  updatedat   DateTime?    @default(now()) @db.Timestamp(6)
+  person_id   Int?
+  person      person?      @relation(fields: [person_id], references: [person_id], onDelete: NoAction, onUpdate: NoAction)
+  bookauthor  bookauthor[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model book {
+  book_id         Int             @id @default(autoincrement())
+  title           String          @db.VarChar(200)
+  amountofpages   Int
+  cost            Decimal         @db.Decimal(10, 2)
+  publisheryear   Int
+  publication     String          @db.VarChar(100)
+  copiesavailable Int             @default(0)
+  createdat       DateTime?       @default(now()) @db.Timestamp(6)
+  updatedat       DateTime?       @default(now()) @db.Timestamp(6)
+  bookauthor      bookauthor[]
+  bookgenre       bookgenre[]
+  bookpublisher   bookpublisher[]
+  loan            loan[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model fine {
+  fine_id   Int       @id @default(autoincrement())
+  date      DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  amount    Decimal   @db.Decimal(10, 2)
+  member_id Int
+  loan_id   Int
+  createdat DateTime? @default(now()) @db.Timestamp(6)
+  updatedat DateTime? @default(now()) @db.Timestamp(6)
+  loan      loan      @relation(fields: [loan_id], references: [loan_id], onDelete: NoAction, onUpdate: NoAction)
+  member    member    @relation(fields: [member_id], references: [member_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model genre {
+  genre_id  Int         @id @default(autoincrement())
+  title     String      @unique @db.VarChar(50)
+  createdat DateTime?   @default(now()) @db.Timestamp(6)
+  updatedat DateTime?   @default(now()) @db.Timestamp(6)
+  bookgenre bookgenre[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model loan {
+  loan_id    Int       @id @default(autoincrement())
+  book_id    Int
+  member_id  Int
+  staff_id   Int
+  loandate   DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  duedate    DateTime  @db.Date
+  returndate DateTime? @db.Date
+  fine       fine[]
+  book       book      @relation(fields: [book_id], references: [book_id], onDelete: NoAction, onUpdate: NoAction)
+  member     member    @relation(fields: [member_id], references: [member_id], onDelete: NoAction, onUpdate: NoAction)
+  staff      staff     @relation(fields: [staff_id], references: [staff_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model member {
+  member_id      Int       @id @default(autoincrement())
+  membershipdate DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  createdat      DateTime? @default(now()) @db.Timestamp(6)
+  updatedat      DateTime? @default(now()) @db.Timestamp(6)
+  person_id      Int
+  fine           fine[]
+  loan           loan[]
+  person         person    @relation(fields: [person_id], references: [person_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model staff {
+  staff_id  Int       @id @default(autoincrement())
+  position  String    @db.VarChar(50)
+  education String    @db.VarChar(255)
+  createdat DateTime? @default(now()) @db.Timestamp(6)
+  updatedat DateTime? @default(now()) @db.Timestamp(6)
+  person_id Int
+  loan      loan[]
+  person    person    @relation(fields: [person_id], references: [person_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model bookauthor {
+  bookauthor_id Int      @id @default(autoincrement())
+  book_id       Int
+  author_id     Int
+  createdat     DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  updatedat     DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  author        author   @relation(fields: [author_id], references: [author_id], onDelete: Cascade, onUpdate: NoAction)
+  book          book     @relation(fields: [book_id], references: [book_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model bookgenre {
+  bookgenre_id Int      @id @default(autoincrement())
+  book_id      Int
+  genre_id     Int
+  createdat    DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  updatedat    DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  book         book     @relation(fields: [book_id], references: [book_id], onDelete: Cascade, onUpdate: NoAction)
+  genre        genre    @relation(fields: [genre_id], references: [genre_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model bookpublisher {
+  bookpublisher_id      Int         @id @default(autoincrement())
+  book_id               Int
+  publisher_id          Int
+  dayofarrivaltolibrary DateTime    @db.Date
+  createdat             DateTime    @default(dbgenerated("CURRENT_DATE")) @db.Date
+  updatedat             DateTime    @default(dbgenerated("CURRENT_DATE")) @db.Date
+  book                  book        @relation(fields: [book_id], references: [book_id], onDelete: Cascade, onUpdate: NoAction)
+  publication           publication @relation(fields: [publisher_id], references: [publication_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model person {
+  person_id Int      @id @default(autoincrement())
+  fullname  String   @db.VarChar(255)
+  phone     String   @db.VarChar(50)
+  email     String   @db.VarChar(100)
+  address   String   @db.VarChar(255)
+  createdat DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  updatedat DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  author    author[]
+  member    member[]
+  staff     staff[]
+}
+
+model publication {
+  publication_id      Int             @id @default(autoincrement())
+  title               String          @db.VarChar(255)
+  dateofestablishment DateTime        @db.Date
+  createdat           DateTime        @default(dbgenerated("CURRENT_DATE")) @db.Date
+  updatedat           DateTime        @default(dbgenerated("CURRENT_DATE")) @db.Date
+  bookpublisher       bookpublisher[]
+}

@@ -1,0 +1,6 @@
+.idea/
+*.iml
+data/
+/generated/prisma
+node_modules/
+.env
